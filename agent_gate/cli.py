@@ -33,7 +33,7 @@ def summary(rep):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="agent_gate", description="Generate, run and gate evals for an agent.")
-    ap.add_argument("--spec", default="sample_agent/spec.json")
+    ap.add_argument("--spec", default="refund_desk/spec.json")
     ap.add_argument("--agent", help="module:factory (default: spec adapter)")
     ap.add_argument("--agent-arg", action="append", help="key=value passed to the agent factory")
     ap.add_argument("--reference", help="module:factory of a trusted agent; cases it fails are test bugs")
@@ -43,17 +43,23 @@ def main(argv=None):
     ap.add_argument("--changed-tool", action="append", help="only run cases for requirements touching this tool")
     ap.add_argument("--baseline", help="report.json of the last approved version")
     ap.add_argument("--out", help="write the full report as JSON")
+    ap.add_argument("--html", help="also write a standalone HTML report")
+    ap.add_argument("--model", default="muse-spark-1.3", help="model id for --provider meta")
+    ap.add_argument("--base-url", default="https://api.meta.ai/v1", help="OpenAI-style endpoint for --provider meta")
     a = ap.parse_args(argv)
 
     spec = load_spec(a.spec)
     factory = load(a.agent or spec["adapter"]["agent"])
     ref = (load(a.reference), _kv(a.reference_arg)) if a.reference else None
     base = json.load(open(a.baseline)) if a.baseline else None
-    provider = MetaProvider() if a.provider == "meta" else MockProvider()
+    provider = MetaProvider(base_url=a.base_url, model=a.model) if a.provider == "meta" else MockProvider()
     rep = run_suite(spec, provider, factory, _kv(a.agent_arg), k=a.k, ref=ref, baseline=base,
                     changed_tools=a.changed_tool)
     print(summary(rep))
     if a.out:
         os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
         json.dump(rep, open(a.out, "w"), indent=2)
+    if a.html:
+        from .report import render
+        open(a.html, "w").write(render(rep))
     return 0 if rep["verdict"]["verdict"] == "SHIP" else 1

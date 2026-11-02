@@ -4,7 +4,7 @@ import time
 import zlib
 
 from .checks import evaluate
-from .generate import VARY, expand, generate
+from .generate import domain_of, expand, generate
 from .spec import discover, load
 
 BAD = ("agent_bug", "flaky")
@@ -99,7 +99,8 @@ def run_suite(spec, provider, factory, agent_kwargs=None, k=5, ref=None, baselin
     for r in results:
         if r["id"] in ref_bad:
             r["status"] = "test_bug"
-    seen = {(c["req"], c["params"][VARY[c["kind"]]]) for c in cases if VARY.get(c["kind"])}
+    vary = domain_of(spec).VARY
+    seen = {(c["req"], c["params"][vary[c["kind"]]]) for c in cases if vary.get(c["kind"])}
     frontier, expansion = [r for r in results if r["status"] in BAD], []
     for rnd in range(1, rounds + 1):
         new = []

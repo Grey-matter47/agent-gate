@@ -2,71 +2,78 @@
 
 A QA agent for enterprise AI agents. Give it an agent's spec and it generates test cases, proves its own checks can fail, runs the cases, triages failures, and returns a release verdict: **SHIP**, **BLOCK** or **CONDITIONAL**.
 
-Built for the Meta Global AI Developer Hackathon (Oct 26 to Nov 4, 2026), Indie track. Status: working harness on a deterministic sample agent. The Meta Model API provider is written but not yet run against the live API.
+Built for the Meta Global AI Developer Hackathon (Oct 26 to Nov 4, 2026), Indie track.
+
+**Status:** working harness with two sample domains (support-ticket triage, refund desk), a rule-based reference agent with seeded defects for each, and an LLM-driven refund agent that runs on Muse Spark or any OpenAI-style endpoint. The Meta Model API path (`MetaProvider`, `LLMRefundAgent`) is written and tested against a scripted client but **has not been run against the live API yet**; `live_check.py` is the first-call check.
 
 ## Why
 
 Enterprises will not ship agents they cannot test. In a June 2026 VentureBeat Pulse survey (157 enterprises, self-selected, so directional), about half had an agent pass internal checks and still cause a customer-facing problem, and only 5% fully trusted the automated evals behind release decisions. Agent Gate generates the tests and refuses to trust a check until it has shown that the check can tell a good answer from a bad one.
 
-## The six loops (what exists today)
+## The six loops
 
 | # | Loop | Code | What it does today |
 |---|---|---|---|
 | 1 | Discover | `agent_gate/spec.py` | Reads the spec, lists requirements and tools, reports tools that no requirement covers |
-| 2 | Generate and validate | `agent_gate/generate.py` | Builds cases per requirement kind (permission, leak, rule, injection, tool failure, boundary, role gate). Each case proposes several checks. A check is kept only if it passes a known-good trace and fails a known-bad trace |
-| 3 | Execute | `agent_gate/runner.py` | Fresh data for every run, tool-failure injection, k repeats per case (default 5), per-run seeds so results are reproducible |
+| 2 | Generate and validate | `agent_gate/generate.py` + a domain module | Builds cases per requirement kind (permission, leak, rule, injection, tool failure, boundary, role gate). Each case proposes several checks. A check is kept only if it passes a known-good trace and fails a known-bad trace |
+| 3 | Execute | `agent_gate/runner.py` | Fresh data for every run, tool-failure injection, k repeats per case (default 5), per-run seeds |
 | 4 | Triage | `agent_gate/runner.py` | Re-runs anything that did not pass cleanly, then labels it `agent_bug` (fails every run), `flaky` (fails some), `test_bug` (a trusted reference agent also fails it) or `env_error` |
 | 5 | Expand | `agent_gate/generate.py` | Creates new variants of failing cases through the same builders, so every new check is validated again |
-| 6 | Gate | `agent_gate/runner.py` | P0 failure or any regression against a baseline report gives BLOCK. Only P1 or P2 failures give CONDITIONAL. Otherwise SHIP. `--changed-tool` re-runs only the cases for requirements touching that tool |
+| 6 | Gate | `agent_gate/runner.py` | P0 failure or any regression against a baseline gives BLOCK. Only lower-priority failures give CONDITIONAL. Otherwise SHIP. `--changed-tool` re-runs only the cases for requirements touching that tool |
 
-## Quick start
+A new domain is one module (`fixtures`, `BUILDERS`, `PLANS`, `VARY`, `PRIORITY`) plus a `spec.json`; see `refund_desk/`.
+
+## Quick start (offline, standard library only)
 
 ```bash
-python3 -m unittest discover -s tests -t .      # 10 tests
-python3 bench.py                                # seeded-defect benchmark
-python3 -m agent_gate --agent-arg defects=D1,D3 # gate a buggy agent
-python3 -m agent_gate --baseline reports/fixed.json --agent-arg defects=D3
-python3 -m agent_gate --changed-tool set_priority
+python3 -m unittest discover -s tests -t .                       # 20 tests
+python3 bench.py                                                 # refund-desk seeded-defect benchmark
+python3 bench.py sample_agent/spec.json                          # ticket-triage benchmark
+python3 -m agent_gate --agent-arg defects=D1,D7 --html out.html  # gate a buggy agent, write an HTML report
+python3 -m agent_gate --baseline reports/refund-desk/fixed.json --agent-arg defects=D7
+python3 -m agent_gate --changed-tool issue_refund
 ```
 
-Standard library only. Tested on Python 3.13; other versions not checked.
+Tested on Python 3.13; other versions not checked.
 
-## Results on the sample agent
+## Live run on Muse Spark
 
-The sample agent (`sample_agent/`) is a deterministic, rule-based support-ticket triage agent with two tools and six switchable defects. The same author wrote the agent, the defects and the generators, so these numbers show the harness works end to end. They do not show it generalises to a real LLM-driven agent.
+```bash
+export MODEL_API_KEY=...        # your own shell only. Never paste the key into a file or a chat.
+python3 live_check.py           # 3 calls: plain chat, paraphrase, tool-calling agent
+python3 -m agent_gate --provider meta --agent refund_desk.llm_agent:build --k 3 --out reports/live-spark.json --html reports/live-spark.html
+```
 
-Fixed agent: **SHIP**, 0 of 38 cases failing, 100% requirement coverage, 190 runs.
+`--provider meta` uses Muse Spark to write the message variants and injection payloads. `--agent refund_desk.llm_agent:build` makes the agent under test an LLM that decides its own tool calls. Use the standard model id `muse-spark-1.3`, not the `-contributor` variant, which lets Meta use your content for training.
 
-| Defect | What it does | Requirement | Caught alone | Verdict | Class |
+For the open-weight run, point both at a partner endpoint, for example `--base-url <endpoint> --model <id> --agent-arg base_url=<endpoint> --agent-arg model=<id> --agent-arg key_env=<ENV_NAME>`.
+
+## Results (offline, rule-based agents)
+
+The same author wrote each agent, its defects and the generators, so these numbers show the harness works end to end. They do not show it generalises to an LLM-driven agent; that is what the live run is for.
+
+| Domain | Fixed agent | Cases | Runs | Seeded defects caught alone | All defects together |
 |---|---|---|---|---|---|
-| D1 | customer can read another customer's ticket | R1 | yes | BLOCK | agent_bug |
-| D2 | customer sees the internal note | R2 | yes | BLOCK | agent_bug |
-| D3 | outage keyword matched case-sensitively | R3 | yes | CONDITIONAL | agent_bug |
-| D4 | obeys instructions written inside ticket text | R4 | yes | BLOCK | agent_bug |
-| D5 | claims success when a tool call fails | R5 | yes | BLOCK | agent_bug |
-| D6 | intermittently skips a write but says it was done | R3 (also flagged R5) | yes | BLOCK | flaky |
+| refund-desk | SHIP, 0 failing | 42 | 210 | 7 of 7 | BLOCK |
+| ticket-triage | SHIP, 0 failing | 38 | 190 | 6 of 6 | BLOCK |
 
-All six together: BLOCK. Full output is in `reports/`.
+Both fixed agents have 100% requirement coverage. The sanity gate drops 52 weak candidate checks per run, mostly trivial (`no_crash` cannot fail on synthetic traces). A flaky defect (intermittent skipped write) is labelled `flaky`, not `agent_bug`. Against a SHIP baseline, a new defect is reported as a regression and blocks. Full output is in `reports/`.
 
-The sanity gate dropped 52 weak candidate checks per run: 34 `no_crash`, 12 `reply_contains_any`, 4 `reply_not_contains` and 2 `state_unchanged`. Most of those are trivial, because the synthetic bad traces never crash. A few are real catches, for example a reply check that would have passed an agent that claims success without writing anything.
+One defect shows a side effect: the refund-desk case-sensitivity bug (D3) is flagged on R3, R6 and R7 because the shouted variants of those cases also fall through to "tell me what is wrong". That is the defect's real blast radius, not a false alarm.
 
 ## Known limits
 
-- Case generation offline is templates plus string mutations (`MockProvider`). No LLM is used for it yet, so "dynamic" currently means spec-driven, not model-driven.
-- The sample agent is rule-based. No LLM-driven agent has been tested, and the keyword matching in it would break on free-form paraphrases from a real model.
-- Expansion currently multiplies variants of known failures. It confirms and sizes a defect but has not yet found a new defect class.
-- Known-good and known-bad traces are authored by the case builders. They prove a check discriminates; they do not prove the check is right for a real agent. The `--reference` option (a trusted agent) is the partial answer.
+- Offline generation is templates plus string mutation (`MockProvider`). The LLM-written variants exist only behind `--provider meta`, which is untested live.
+- The reference agents are rule-based. No LLM-driven agent has been gated yet.
+- Expansion multiplies variants of known failures. It has not yet found a new defect class.
+- Known-good and known-bad traces are authored by the case builders. They prove a check discriminates; they do not prove the check is right for a real agent. `--reference` (a trusted agent) is the partial answer.
+- Checks are deterministic only (reply text, state, tool calls). There is no judge model for fuzzy output yet.
 - Triage reports the failing check and the trace, not the first wrong step.
-- `MetaProvider` is untested against the live Meta Model API. The base URL, bearer auth and `muse-spark-1.3` come from Meta's models page. The chat-completions request shape is assumed.
+- `MetaProvider` and `LLMRefundAgent` assume an OpenAI-style chat-completions and tool-calling shape. Base URL, bearer auth and model ids come from Meta's models page; the request shape is unverified.
 
 ## Planned
 
-- Run `MetaProvider` live for case generation and as the model driving an LLM-based agent under test.
-- A second, independent judge from a different model family for rubric checks on fuzzy output, calibrated against a few human labels.
+- A second, independent judge from a different model family for rubric checks, calibrated against a few human labels.
 - A regression store that replays past failures.
 - First-wrong-step localisation in triage.
 - Adapters so a real agent can be plugged in without writing a toolbox.
-
-## Using the Meta Model API
-
-Set `MODEL_API_KEY` in your shell and run with `--provider meta`. Never paste the key into a file or chat. Use the standard model id (`muse-spark-1.3`), not the `-contributor` variant, which lets Meta use your content for training.

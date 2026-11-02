@@ -15,7 +15,10 @@ def evaluate(check, tr, case):
         if kind == "reply_contains_any":
             return any(t.lower() in reply for t in a["texts"])
         if kind == "state_equals":
-            return tr["state"]["tickets"][a["ticket"]][a["field"]] == a["value"]
+            cur = tr["state"]
+            for step in a["path"]:
+                cur = cur[step]
+            return cur == a["value"]
         if kind == "state_unchanged":
             return tr["state"] == case["fixtures"]
         if kind == "no_crash":

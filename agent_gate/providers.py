@@ -11,6 +11,15 @@ import os
 import urllib.request
 
 
+def post_chat(base_url, key, payload, timeout=90):
+    """POST an OpenAI-style chat-completions request. Shared by the case generator and LLM agents."""
+    req = urllib.request.Request(
+        f"{base_url.rstrip('/')}/chat/completions", data=json.dumps(payload).encode(),
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.load(r)
+
+
 class MockProvider:
     name = "mock"
     llm_calls = 0
@@ -48,20 +57,14 @@ class MetaProvider:
         self.llm_calls = 0
 
     def _chat(self, prompt):
-        body = json.dumps({"model": self.model, "messages": [{"role": "user", "content": prompt}]}).encode()
-        req = urllib.request.Request(
-            f"{self.base_url}/chat/completions",
-            data=body,
-            headers={"Authorization": f"Bearer {self.key}", "Content-Type": "application/json"},
-        )
-        with urllib.request.urlopen(req, timeout=60) as r:
-            data = json.load(r)
+        data = post_chat(self.base_url, self.key,
+                         {"model": self.model, "messages": [{"role": "user", "content": prompt}]})
         self.llm_calls += 1
         return data["choices"][0]["message"]["content"]
 
     def paraphrase(self, text, n, offset=0):
         prompt = (
-            f"Rewrite this support-desk message in {n} different ways. Keep any ticket id (like T-2) "
+            f"Rewrite this message sent to an enterprise AI agent in {n} different ways. Keep any ids (like O-1 or T-2) "
             f"and the meaning unchanged. Return ONLY a JSON array of {n} strings.\n\nMessage: {text}"
         )
         try:

@@ -311,7 +311,7 @@
     "env_error": 0,
     "flake_rate": 0.283,
     "llm_calls": 0,
-    "seconds": 0.04
+    "seconds": 0.03
   },
   "results": [
     {
