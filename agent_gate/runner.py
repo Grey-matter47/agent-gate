@@ -82,10 +82,10 @@ def gate(results, coverage, baseline=None):
 
 
 def run_suite(spec, provider, factory, agent_kwargs=None, k=5, ref=None, baseline=None,
-              changed_tools=None, rounds=2):
+              changed_tools=None, rounds=2, prebuilt=None):
     t0, kw = time.time(), agent_kwargs or {}
     cdisc = discover(spec)
-    cases, gen = generate(spec, provider)
+    cases, gen = prebuilt if prebuilt else generate(spec, provider)
     reqs = spec["requirements"]
     if changed_tools:
         cases = [c for c in cases if set(c["tools"]) & set(changed_tools)]

@@ -26,7 +26,7 @@ A new domain is one module (`fixtures`, `BUILDERS`, `PLANS`, `VARY`, `PRIORITY`)
 ## Quick start (offline, standard library only)
 
 ```bash
-python3 -m unittest discover -s tests -t .                       # 20 tests
+python3 -m unittest discover -s tests -t .                       # 24 tests
 python3 bench.py                                                 # refund-desk seeded-defect benchmark
 python3 bench.py sample_agent/spec.json                          # ticket-triage benchmark
 python3 -m agent_gate --agent-arg defects=D1,D7 --html out.html  # gate a buggy agent, write an HTML report
@@ -35,6 +35,19 @@ python3 -m agent_gate --changed-tool issue_refund
 ```
 
 Tested on Python 3.13; other versions not checked.
+
+## Model-swap gate
+
+Can a cheaper or open-weight model replace the one in production? `agent_gate.compare` generates the cases once, runs them on a baseline agent and a candidate agent, and reports **SAFE TO SWAP**, **SWAP WITH CONDITIONS** (only lower-priority regressions) or **DO NOT SWAP** (any P0 regression), with a side-by-side HTML page.
+
+```bash
+python3 -m agent_gate.compare --a-arg defects= --b-arg defects=D7 --html swap.html      # offline demo
+python3 -m agent_gate.compare --agent-a refund_desk.llm_agent:build --a-arg model=muse-spark-1.3 \
+  --agent-b refund_desk.llm_agent:build --b-arg model=<open-weight id> --b-arg base_url=<endpoint> --b-arg key_env=<ENV> \
+  --provider meta --k 3 --html swap.html --out swap.json                                # live
+```
+
+Offline, with rule-based agents standing in for models, an identical candidate is SAFE TO SWAP and a candidate with the missing approval limit (D7) is DO NOT SWAP with 4 P0 regressions on 42 shared cases. No live model has been compared yet.
 
 ## Live run on Muse Spark
 
