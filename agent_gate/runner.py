@@ -44,8 +44,9 @@ def run_case(spec, case, factory, kwargs, k, seed_base=0):
         failed = [c["kind"] for c in case["checks"] if not evaluate(c, tr, case)]
         if tr["crashed"] and "no_crash" not in failed:  # a crash never passes a case by default
             failed.append("no_crash")
-        runs.append({"ok": not failed, "failed": failed, "reply": tr["reply"][:160],
-                     "calls": [c["name"] for c in tr["tool_calls"]]})
+        runs.append({"ok": not failed, "failed": failed, "reply": tr["reply"][:300],
+                     "calls": [{"name": c["name"], "args": c.get("args", {}), "error": c.get("error")}
+                               for c in tr["tool_calls"]]})
     return runs
 
 
@@ -65,7 +66,8 @@ def triage(spec, case, factory, kwargs, k, rerun=5):
         status = "pass"
     return {"id": case["id"], "req": case["req"], "kind": case["kind"], "priority": case["priority"],
             "status": status, "runs": len(runs), "fails": len(fails), "env_errors": len(envs),
-            "evidence": fails[0] if fails else (envs[0] if envs else None)}
+            "evidence": fails[0] if fails else (envs[0] if envs else None),
+            "message": case.get("message"), "traces": runs}
 
 
 def gate(results, coverage, baseline=None):
@@ -93,12 +95,18 @@ def gate(results, coverage, baseline=None):
 
 
 def run_suite(spec, provider, factory, agent_kwargs=None, k=5, ref=None, baseline=None,
-              changed_tools=None, rounds=2, prebuilt=None):
+              changed_tools=None, rounds=2, prebuilt=None, only_reqs=None):
     """rounds=0 turns expansion (loop 5) off."""
     t0, kw = time.time(), agent_kwargs or {}
     cdisc = discover(spec)
-    cases, gen = prebuilt if prebuilt else generate(spec, provider)
+    if only_reqs and not prebuilt:  # generate only what will run: no paraphrase calls for skipped requirements
+        cases, gen = generate({**spec, "requirements": [r for r in spec["requirements"] if r["id"] in only_reqs]}, provider)
+    else:
+        cases, gen = prebuilt if prebuilt else generate(spec, provider)
     reqs = spec["requirements"]
+    if only_reqs:
+        cases = [c for c in cases if c["req"] in only_reqs]
+        reqs = [r for r in reqs if r["id"] in only_reqs]
     if changed_tools:
         cases = [c for c in cases if set(c["tools"]) & set(changed_tools)]
         reqs = [r for r in reqs if set(r.get("tools", [])) & set(changed_tools)]

@@ -1,0 +1,12 @@
+VERDICT: SHIP  (all checks passed)
+cases 39 | runs 117 | coverage 100% | agent_bug 0 | flaky 0 | test_bug 0 | env_error 0 | llm_calls 10 | 1389.27s
+checks dropped by the sanity gate: 49; cases dropped: 0
+
+req   | cases | failing | classes
+R1    |     8 |       0 | -
+R2    |     4 |       0 | -
+R3    |     8 |       0 | -
+R4    |     5 |       0 | -
+R5    |     2 |       0 | -
+R6    |     8 |       0 | -
+R7    |     4 |       0 | -

@@ -137,5 +137,19 @@ class RoleGateTests(unittest.TestCase):
         self.assertTrue(any(not evaluate(c, tr, case) for c in case["checks"]))
 
 
+class TraceAndFilterTests(unittest.TestCase):
+    def test_passing_runs_keep_reply_and_tool_args(self):
+        from agent_gate.providers import MockProvider
+        from agent_gate.runner import run_suite
+        from agent_gate.spec import load
+        rep = run_suite(SPEC, MockProvider(), load(SPEC["adapter"]["agent"]), {}, k=2, rounds=0, only_reqs=["R3"])
+        self.assertTrue(rep["results"] and all(r["req"] == "R3" for r in rep["results"]))
+        t = rep["results"][0]["traces"][0]
+        self.assertTrue(t["ok"])
+        self.assertIn("refunded", t["reply"].lower())
+        self.assertEqual(t["calls"][-1]["name"], "issue_refund")
+        self.assertIn("amount", t["calls"][-1]["args"])
+
+
 if __name__ == "__main__":
     unittest.main()
