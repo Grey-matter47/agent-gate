@@ -4,6 +4,7 @@ import time
 import zlib
 
 from .checks import evaluate
+from .errors import is_env_error
 from .generate import domain_of, expand, generate
 from .spec import discover, load
 
@@ -21,19 +22,28 @@ def run_once(spec, case, factory, kwargs, seed):
     try:
         reply = agent.handle(tools, case["user"], case["message"])
     except Exception as e:
+        if is_env_error(e):  # API/network failure: no verdict on the agent
+            return {"env_error": repr(e)[:300]}
         crashed, reply = True, f"CRASH: {e!r}"
     return {"reply": reply, "state": tools.state, "tool_calls": tools.calls, "crashed": crashed}
+
+
+def case_seed(case_id, i):
+    """Deterministic per-run seed. Kept below 2**31: the Meta API rejects larger seeds with HTTP 400."""
+    return zlib.crc32(f"{case_id}:{i}".encode()) % 2**31
 
 
 def run_case(spec, case, factory, kwargs, k, seed_base=0):
     runs = []
     for i in range(k):
-        seed = zlib.crc32(f"{case['id']}:{seed_base + i}".encode())
+        seed = case_seed(case["id"], seed_base + i)
         tr = run_once(spec, case, factory, kwargs, seed)
         if "env_error" in tr:
             runs.append({"ok": None, "env_error": tr["env_error"]})
             continue
         failed = [c["kind"] for c in case["checks"] if not evaluate(c, tr, case)]
+        if tr["crashed"] and "no_crash" not in failed:  # a crash never passes a case by default
+            failed.append("no_crash")
         runs.append({"ok": not failed, "failed": failed, "reply": tr["reply"][:160],
                      "calls": [c["name"] for c in tr["tool_calls"]]})
     return runs
@@ -46,14 +56,15 @@ def triage(spec, case, factory, kwargs, k, rerun=5):
         runs += run_case(spec, case, factory, kwargs, rerun, seed_base=k)
     fails = [r for r in runs if r["ok"] is False]
     envs = [r for r in runs if r["ok"] is None]
-    if envs:
+    scored = len(runs) - len(envs)
+    if fails:  # real failures are reported even if other runs hit environment errors
+        status = "agent_bug" if len(fails) == scored else "flaky"
+    elif envs:
         status = "env_error"
-    elif not fails:
-        status = "pass"
     else:
-        status = "agent_bug" if len(fails) == len(runs) else "flaky"
+        status = "pass"
     return {"id": case["id"], "req": case["req"], "kind": case["kind"], "priority": case["priority"],
-            "status": status, "runs": len(runs), "fails": len(fails),
+            "status": status, "runs": len(runs), "fails": len(fails), "env_errors": len(envs),
             "evidence": fails[0] if fails else (envs[0] if envs else None)}
 
 
@@ -83,6 +94,7 @@ def gate(results, coverage, baseline=None):
 
 def run_suite(spec, provider, factory, agent_kwargs=None, k=5, ref=None, baseline=None,
               changed_tools=None, rounds=2, prebuilt=None):
+    """rounds=0 turns expansion (loop 5) off."""
     t0, kw = time.time(), agent_kwargs or {}
     cdisc = discover(spec)
     cases, gen = prebuilt if prebuilt else generate(spec, provider)

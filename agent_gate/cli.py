@@ -40,6 +40,7 @@ def main(argv=None):
     ap.add_argument("--reference-arg", action="append")
     ap.add_argument("--provider", choices=["mock", "meta"], default="mock")
     ap.add_argument("--k", type=int, default=5, help="repeats per case")
+    ap.add_argument("--rounds", type=int, default=2, help="expansion rounds (0 = expansion off)")
     ap.add_argument("--changed-tool", action="append", help="only run cases for requirements touching this tool")
     ap.add_argument("--baseline", help="report.json of the last approved version")
     ap.add_argument("--out", help="write the full report as JSON")
@@ -54,7 +55,7 @@ def main(argv=None):
     base = json.load(open(a.baseline)) if a.baseline else None
     provider = MetaProvider(base_url=a.base_url, model=a.model) if a.provider == "meta" else MockProvider()
     rep = run_suite(spec, provider, factory, _kv(a.agent_arg), k=a.k, ref=ref, baseline=base,
-                    changed_tools=a.changed_tool)
+                    changed_tools=a.changed_tool, rounds=a.rounds)
     print(summary(rep))
     if a.out:
         os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)

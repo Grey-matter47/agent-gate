@@ -2,13 +2,13 @@
 chat-completions endpoint with tool calling, so the same agent can run on Muse Spark (Meta Model
 API) or on an open-weight model served by a partner (Baseten, Modal, Fireworks).
 
-NOT yet exercised against a live endpoint: the request/response shape follows the OpenAI format
-and must be checked on the first real call. The loop itself is covered by tests with a scripted
-client (tests/test_llm_agent.py).
+Checked against the live Meta Model API with live_check.py (chat, paraphrase and tool calling).
+The loop itself is covered by tests with a scripted client (tests/test_llm_agent.py).
 """
 import json
 import os
 
+from agent_gate.errors import EnvError
 from agent_gate.providers import post_chat
 from .tools import ToolError
 
@@ -52,7 +52,10 @@ class LLMRefundAgent:
         for _ in range(self.max_steps):
             data = self.post({"model": self.model, "messages": msgs, "tools": TOOLS,
                               "temperature": 0.2, "seed": self.seed})
-            msg = data["choices"][0]["message"]
+            try:
+                msg = data["choices"][0]["message"]
+            except (KeyError, IndexError, TypeError) as e:
+                raise EnvError(f"malformed API response: {e!r}") from e
             calls = msg.get("tool_calls") or []
             if not calls:
                 return (msg.get("content") or "").strip()

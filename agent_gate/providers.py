@@ -1,23 +1,39 @@
 """Model providers used for case generation.
 
 MockProvider is deterministic and offline (used for tests and the benchmark).
-MetaProvider calls the Meta Model API. It has NOT been exercised against the live API yet:
-the base URL, bearer auth and the model id come from Meta's models page, but the exact
-chat-completions request/response shape is assumed to be OpenAI-style and must be checked
-on the first live call.
+MetaProvider calls the Meta Model API with the OpenAI-style chat-completions shape, checked live
+with live_check.py.
 """
 import json
 import os
+import socket
+import time
+import urllib.error
 import urllib.request
 
+RETRY_STATUS = {429, 500, 502, 503, 504}
 
-def post_chat(base_url, key, payload, timeout=90):
-    """POST an OpenAI-style chat-completions request. Shared by the case generator and LLM agents."""
+
+def post_chat(base_url, key, payload, timeout=90, retries=3, backoff=2.0, _open=None):
+    """POST an OpenAI-style chat-completions request. Shared by the case generator and LLM agents.
+
+    Transient failures (429, 5xx, timeouts) are retried with exponential backoff. Anything else,
+    e.g. HTTP 400, is raised at once: retrying a bad request only spends quota."""
+    _open = _open or urllib.request.urlopen
     req = urllib.request.Request(
         f"{base_url.rstrip('/')}/chat/completions", data=json.dumps(payload).encode(),
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.load(r)
+    for attempt in range(retries + 1):
+        try:
+            with _open(req, timeout=timeout) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code not in RETRY_STATUS or attempt == retries:
+                raise
+        except (urllib.error.URLError, socket.timeout, TimeoutError, ConnectionError):
+            if attempt == retries:
+                raise
+        time.sleep(backoff * 2 ** attempt)
 
 
 class MockProvider:
