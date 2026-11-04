@@ -4,6 +4,8 @@ A QA agent for enterprise AI agents. Give it an agent's spec and it generates te
 
 Built for the Meta Global AI Developer Hackathon (Oct 26 to Nov 4, 2026), Indie track.
 
+**Demo video (2:47):** https://youtu.be/B2FvLE6puwU
+
 **Status:** working harness with two sample domains (support-ticket triage, refund desk), a rule-based reference agent with seeded defects for each, and an LLM-driven refund agent that runs on Muse Spark or any OpenAI-style endpoint. The Meta Model API path (`MetaProvider`, `LLMRefundAgent`) has been run live on `muse-spark-1.3`: see [Live run on Muse Spark](#live-run-on-muse-spark).
 
 ## Why
