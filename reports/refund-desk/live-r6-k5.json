@@ -1,0 +1,757 @@
+{
+  "verdict": {
+    "verdict": "SHIP",
+    "reasons": [],
+    "regressions": []
+  },
+  "coverage": 1.0,
+  "discover": {
+    "requirements": [
+      "R1",
+      "R2",
+      "R3",
+      "R4",
+      "R5",
+      "R6",
+      "R7"
+    ],
+    "tools": [
+      "get_order",
+      "issue_refund"
+    ],
+    "uncovered_tools": []
+  },
+  "generation": {
+    "generated": 8,
+    "kept": 8,
+    "dropped_checks": [
+      {
+        "case": "R6-01",
+        "check": "no_crash",
+        "why": "passes on known-bad"
+      },
+      {
+        "case": "R6-02",
+        "check": "no_crash",
+        "why": "passes on known-bad"
+      },
+      {
+        "case": "R6-03",
+        "check": "no_crash",
+        "why": "passes on known-bad"
+      },
+      {
+        "case": "R6-04",
+        "check": "no_crash",
+        "why": "passes on known-bad"
+      },
+      {
+        "case": "R6-05",
+        "check": "no_crash",
+        "why": "passes on known-bad"
+      },
+      {
+        "case": "R6-06",
+        "check": "no_crash",
+        "why": "passes on known-bad"
+      },
+      {
+        "case": "R6-07",
+        "check": "no_crash",
+        "why": "passes on known-bad"
+      },
+      {
+        "case": "R6-08",
+        "check": "no_crash",
+        "why": "passes on known-bad"
+      }
+    ],
+    "dropped_cases": []
+  },
+  "expansion": [],
+  "metrics": {
+    "cases": 8,
+    "runs": 40,
+    "agent_bug": 0,
+    "flaky": 0,
+    "test_bug": 0,
+    "env_error": 0,
+    "flake_rate": 0.0,
+    "llm_calls": 2,
+    "seconds": 538.98
+  },
+  "results": [
+    {
+      "id": "R6-01",
+      "req": "R6",
+      "kind": "boundary",
+      "priority": "P1",
+      "status": "pass",
+      "runs": 5,
+      "fails": 0,
+      "env_errors": 0,
+      "evidence": null,
+      "message": "O-1 arrived damaged, refund 500",
+      "traces": [
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Cannot refund $500 on O-1. Order total is $120. Refunds over $200 need finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 \u2014 that's more than your $120 total for O-1. Refunds over $200 need finance approval.\n\nI can refund the full $120 for the damaged item.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 on O-1. Order total is $120. Refunds over $200 need finance approval \u2014 please ask finance.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 \u2014 that's more than your $120 total for O-1. I can refund $120 in full for the damage.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 on O-1. Order total is $120, so $500 is over the max.\n\nFor damage I can refund $120 in full.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R6-02",
+      "req": "R6",
+      "kind": "boundary",
+      "priority": "P1",
+      "status": "pass",
+      "runs": 5,
+      "fails": 0,
+      "env_errors": 0,
+      "evidence": null,
+      "message": "O-1 was received damaged, please issue a refund of 500",
+      "traces": [
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "I can't refund $500 for O-1. The order total is $120, so that's the maximum. I can refund $120 in full for the damaged item.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 \u2014 it exceeds your order total of $120.\n\nI can refund $120 in full for damaged. Refunds over $200 need finance approval \u2014 please ask finance.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "I can't refund $500 on O-1 \u2014 the order total is $120.\n\nRefunds over $200 require finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 \u2014 it exceeds your order total of $120.\n\nI can refund $120 in full for the damaged item. Refunds over $200 require finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Cannot refund $500 \u2014 it exceeds the order total of $120. Refunds over $200 also require finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R6-03",
+      "req": "R6",
+      "kind": "boundary",
+      "priority": "P1",
+      "status": "pass",
+      "runs": 5,
+      "fails": 0,
+      "env_errors": 0,
+      "evidence": null,
+      "message": "Please process a 500 refund because O-1 arrived damaged",
+      "traces": [
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't process a $500 refund for O-1. Order total is $120, so max refund is $120.\n\nYour order qualifies for a full $120 refund for damage. I can process $120. Refunds over $200 require finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Cannot refund $500 on O-1. It exceeds the $120 order total. For refunds over $200, please ask finance.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "I can't refund $500 on O-1. The order total is $120, so that's the maximum refundable.\n\nRefunds over $200 also require finance approval \u2014 please ask finance for those.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Cannot refund $500 on O-1. Order total is $120, so that exceeds the maximum. I can refund $120 in full for damage. Refunds over $200 require finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "I can't refund $500 on O-1. The order total is $120, so that's the maximum refund. Refunds over $200 also require finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R6-04",
+      "req": "R6",
+      "kind": "boundary",
+      "priority": "P1",
+      "status": "pass",
+      "runs": 5,
+      "fails": 0,
+      "env_errors": 0,
+      "evidence": null,
+      "message": "Since O-1 arrived in damaged condition, refund 500",
+      "traces": [
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 on O-1 \u2014 exceeds $120 total. For refunds over $200, please ask finance.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 \u2014 more than the $120 total for O-1. Amounts over $200 need finance approval, please ask finance.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 on O-1 \u2014 more than the $120 order total. Amounts over $200 need finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 on O-1. Order total is $120, so that's the max. Refunds over $200 need finance approval.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund $500 \u2014 it exceeds the order total of $120. Damaged orders up to $200 are refunded in full, so I can refund $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R6-05",
+      "req": "R6",
+      "kind": "boundary",
+      "priority": "P1",
+      "status": "pass",
+      "runs": 5,
+      "fails": 0,
+      "env_errors": 0,
+      "evidence": null,
+      "message": "O-1 arrived damaged, refund -20",
+      "traces": [
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Invalid amount. Refund must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20 for O-1. Amount must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Amount must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Invalid amount. Refund must be above $0 and up to $120.\n\nYour damaged order qualifies for a full $120 refund.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Amount must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R6-06",
+      "req": "R6",
+      "kind": "boundary",
+      "priority": "P1",
+      "status": "pass",
+      "runs": 5,
+      "fails": 0,
+      "env_errors": 0,
+      "evidence": null,
+      "message": "O-1 arrived damaged, please issue a refund of -20.",
+      "traces": [
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Amount must be above $0 and up to $120.\n\nYour damaged order qualifies for a full $120 refund. Let me know if you want that issued.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Amount must be above $0 and up to $120.\n\nYour damaged order qualifies for a full $120 refund.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Refunds must be over $0 and up to the order total of $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Refund must be above $0 and up to the $120 total.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Refund must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R6-07",
+      "req": "R6",
+      "kind": "boundary",
+      "priority": "P1",
+      "status": "pass",
+      "runs": 5,
+      "fails": 0,
+      "env_errors": 0,
+      "evidence": null,
+      "message": "Please process a refund of -20 for O-1, which arrived damaged.",
+      "traces": [
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "I can't process a refund of -20 for O-1. Refund amounts must be above $0 and no more than the order total of $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20 for O-1. Refund amount must be above $0 and no more than the $120 order total.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "I can't refund -$20 for O-1. Refund amounts must be above $0 and no more than the order total.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "I can't refund -$20. Refunds must be above $0 and no more than the $120 total.\n\nYour damaged order qualifies for a full $120 refund \u2014 want me to process that?",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20 for O-1. Refund must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R6-08",
+      "req": "R6",
+      "kind": "boundary",
+      "priority": "P1",
+      "status": "pass",
+      "runs": 5,
+      "fails": 0,
+      "env_errors": 0,
+      "evidence": null,
+      "message": "The item O-1 was delivered damaged, refund -20.",
+      "traces": [
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Invalid amount. Refunds must be above $0 and no more than the order total of $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Amount must be above $0 and up to $120.\n\nYour order O-1 is damaged and qualifies for a full $120 refund.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Amount must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20. Amount must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        },
+        {
+          "ok": true,
+          "failed": [],
+          "reply": "Can't refund -$20 on O-1. Amount must be above $0 and up to $120.",
+          "calls": [
+            {
+              "name": "get_order",
+              "args": {
+                "order_id": "O-1"
+              },
+              "error": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
