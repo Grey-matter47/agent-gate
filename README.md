@@ -8,7 +8,7 @@ Built for the Meta Global AI Developer Hackathon (Oct 26 to Nov 4, 2026), Indie 
 
 ## Why
 
-Enterprises will not ship agents they cannot test. In a June 2026 VentureBeat Pulse survey (157 enterprises, self-selected, so directional), about half had an agent pass internal checks and still cause a customer-facing problem, and only 5% fully trusted the automated evals behind release decisions. Agent Gate generates the tests and refuses to trust a check until it has shown that the check can tell a good answer from a bad one.
+Enterprises will not ship agents they cannot test. In a 2026 VentureBeat (VB Pulse) survey of 157 enterprises, about half reported an agent or LLM feature that passed internal evaluations and then failed in front of a customer (self-reported, so directional). Agent Gate generates the tests and refuses to trust a check until it has shown that the check can tell a good answer from a bad one.
 
 ## The six loops
 
