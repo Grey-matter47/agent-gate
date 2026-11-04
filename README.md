@@ -106,3 +106,7 @@ One defect shows a side effect: the refund-desk case-sensitivity bug (D3) is fla
 - A regression store that replays past failures.
 - First-wrong-step localisation in triage.
 - Adapters so a real agent can be plugged in without writing a toolbox.
+
+## License
+
+MIT. Built by Grey-matter47 with help from Claude (Anthropic) as a coding assistant; commits co-authored by Claude are marked as such.
